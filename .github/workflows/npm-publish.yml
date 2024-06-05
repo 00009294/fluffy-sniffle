@@ -25,6 +25,10 @@ jobs:
 
       - name: Build
         run: npm run build
+
+      - name: Debug Build
+        run: ls -R
+        # You can use `find` or other commands to inspect the directory structure
         
   deploy:
     needs: build
