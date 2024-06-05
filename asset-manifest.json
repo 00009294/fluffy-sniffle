@@ -1,0 +1,15 @@
+{
+  "files": {
+    "main.css": "/fluffysniffle/static/css/main.3d48d68f.css",
+    "main.js": "/fluffysniffle/static/js/main.6e8b6946.js",
+    "static/js/453.f50fc886.chunk.js": "/fluffysniffle/static/js/453.f50fc886.chunk.js",
+    "index.html": "/fluffysniffle/index.html",
+    "main.3d48d68f.css.map": "/fluffysniffle/static/css/main.3d48d68f.css.map",
+    "main.6e8b6946.js.map": "/fluffysniffle/static/js/main.6e8b6946.js.map",
+    "453.f50fc886.chunk.js.map": "/fluffysniffle/static/js/453.f50fc886.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.3d48d68f.css",
+    "static/js/main.6e8b6946.js"
+  ]
+}
