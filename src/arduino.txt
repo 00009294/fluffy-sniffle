@@ -1,0 +1,156 @@
+#include <DHT.h>
+#include <LiquidCrystal_I2C.h>
+#include <ESP8266Firebase.h>
+#include <Firebase_ESP_Client.h>
+#include <ESP8266WiFi.h>
+#include <Servo.h>
+
+#define DHTPIN D7
+#define DHTTYPE DHT11
+#define LCD_I2C_ADDRESS 0x27
+#define LCD_COLS 16
+#define LCD_ROWS 2
+#define WATER_SENSOR_PIN A0
+#define RELAY_PIN D6
+#define GREEN_LED_PIN D5
+#define RED_LED_PIN D8
+
+DHT dht(DHTPIN, DHTTYPE);
+LiquidCrystal_I2C lcd(LCD_I2C_ADDRESS, LCD_COLS, LCD_ROWS);
+Servo servo;
+
+#define _SSID "ssid"
+#define _PASSWORD "password"
+#define API_KEY "AIzaSyBO3zcGHYF_6PrHYifm4h72CO6tU7JKjUg"
+#define DATABASE_URL "https://iot-9294-2023-default-rtdb.firebaseio.com/"
+Firebase firebase(PROJECT_ID);
+
+const int servoPin = D3;
+const int delayTime = 1000;
+unsigned long previousMillis = 0;
+const long interval = 3600000;
+
+void setup() {
+  Serial.begin(9600);
+
+  dht.begin();
+  lcd.init();
+  lcd.backlight();
+  pinMode(RELAY_PIN, OUTPUT);
+  pinMode(GREEN_LED_PIN, OUTPUT);
+  pinMode(RED_LED_PIN, OUTPUT);
+  servo.attach(servoPin);
+
+    // Connect to WiFi
+  WiFi.begin(_SSID, _PASSWORD);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print("-");
+  }
+  Serial.println("");
+  Serial.println("WiFi Connected");
+  // Print the IP address
+  Serial.print("IP Address: ");
+  Serial.print("http://");
+  Serial.print(WiFi.localIP());
+  Serial.println("/");
+}
+
+void loop() {
+
+  // Read temperature and humidity
+  float h = dht.readHumidity();
+  float t = dht.readTemperature();
+   firebase.setFloat("hum", h);
+   firebase.setFloat("temp", t);
+
+     // Check if sensor data is valid
+  if (isnan(h) || isnan(t)) {
+    Serial.println("Failed to read sensor data!");
+    return;
+  }
+
+
+  // Read water sensor value
+  int waterValue = analogRead(WATER_SENSOR_PIN);
+  waterValue = map(waterValue, 0, 1023, 0, 100);
+     firebase.setFloat("waterLevel", waterValue);
+
+
+  // logic for green LED to push into firebase 
+  int gled = firebase.getInt("greenLed");
+  Serial.println(gled);
+  if (gled==1) {
+    digitalWrite(GREEN_LED_PIN, HIGH);
+    }
+  else {
+      if (waterValue > 10) {
+        digitalWrite(GREEN_LED_PIN, HIGH);
+      }
+      else {
+        digitalWrite(GREEN_LED_PIN, LOW);
+      }
+      }
+
+    // logic for green LED to push into firebase 
+  int rled = firebase.getInt("redLed");
+  Serial.println(rled);
+  if (rled==1) {
+        digitalWrite(RED_LED_PIN, HIGH);
+    }
+  else {
+    if (waterValue > 10) {
+        digitalWrite(RED_LED_PIN, HIGH);
+      }
+      else {
+        digitalWrite(RED_LED_PIN, LOW);
+      }
+    }
+
+  // logic for feeder into firebase 
+
+  unsigned long currentMillis = millis();
+  int feed = firebase.getInt("feed");
+  Serial.println(feed);
+  if (feed==1) {
+    servo.write(180);
+    delay(1000);
+    servo.write(0);   
+    }
+  else {
+    if (currentMillis - previousMillis >= interval) {
+    previousMillis = currentMillis; // save the last time servo was activated
+    servo.write(180);
+    delay(1000);
+    servo.write(0);
+  }
+  }
+
+
+  // Control relay based on water sensor value
+  if (waterValue > 10) {
+    // If water sensor is above 10, turn on relay, red LED, and turn off GREEN LED
+    digitalWrite(RELAY_PIN, HIGH);
+  } else {
+    // Move the servo
+    servo.write(180);
+    delay(delayTime);
+    servo.write(0);
+    delay(delayTime);
+    }
+
+  // Display temperature, humidity, and water sensor value on LCD
+  lcd.setCursor(0, 0);
+  lcd.print("T:");
+  lcd.print(t);
+  lcd.print("C");
+  lcd.setCursor(0, 1);
+  lcd.print("H:");
+  lcd.print(h);
+  lcd.print("%");
+  lcd.print("W:");
+  lcd.print(waterValue);
+  lcd.print("%");
+
+  delay(1000); // Update every 1 seconds
+}
