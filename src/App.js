@@ -1,4 +1,3 @@
-import logo from './logo.svg';
 import Temperature from './components/temp/temp';
 import Humidity from './components/hum/hum';
 import GreenLed from './components/green/green';

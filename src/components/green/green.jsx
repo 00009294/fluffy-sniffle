@@ -4,14 +4,9 @@ import React, { useState, useEffect } from 'react';
 
 
 const GreenLed = () => {
-  const [greenLed, setgreenLed] = useState(null);
+  const [greenLed] = useState(null);
 
   useEffect(() => {
-
-    const handleGreenLed =  (snapshot) => {
-      const greenLedValue = snapshot.val();
-      setgreenLed(greenLedValue);
-    }
 
     return()=>{
     }
